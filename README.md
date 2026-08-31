@@ -57,8 +57,10 @@ Identisches Muster wie im CO2-Aufteilungsrechner und im Gebäudeabgrenzungsrechn
 
 Zero-Cookie-Strategie: keine Marketing- oder Tracking-Cookies, kein Cookie-Banner nötig. Impressum und Datenschutz verlinken im Footer direkt auf `energetisiert.de/impressum` bzw. `energetisiert.de/datenschutz`.
 
-## Deployment (Vercel)
+## Deployment (Vercel) — Live-Stand
 
-1. Eigenes Supabase-Projekt anlegen, Migrationen unter `supabase/migrations/` ausführen (Reihenfolge nach Dateiname).
-2. Environment Variables setzen: `IP_SALT`, `REQUEST_TOKEN_SECRET` (siehe `.env.example`) — ausschließlich in Vercel, nie im Repo. `NEXT_PUBLIC_SUPABASE_URL` und `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` sind unkritisch (durch RLS geschützt). Ein Service-Role-Key wird nicht benötigt. BotID braucht keinen Key.
-3. Domain `sanierungsrechner.energetisiert.de` aufschalten (Default-Allowlist in `src/lib/security/guards.ts` erwartet diese Subdomain; abweichende Domains über `ALLOWED_ORIGINS` setzen).
+- **GitHub**: [energetisiert/sanierungsrechner-wg](https://github.com/energetisiert/sanierungsrechner-wg) (privat), Produktionsbranch `main`.
+- **Vercel**: Projekt `sanierungsrechner-wg` im Team `energetisiert`, mit dem Repo verknüpft (Auto-Deploy bei jedem Push nach `main`). Aktuell live unter `https://sanierungsrechner-wg.vercel.app`.
+- **Supabase**: Rate-Limiting läuft im geteilten Projekt **„foerderrechner"** (`gsmuqvjyfjtjbbxqmfgt`) statt in einem eigenen — spart die 10 $/Monat für ein dediziertes Projekt (bewusste Entscheidung, s. Kostenabfrage). Eigener Tabellen-/Funktionsname `sanierung_*`, keine Kollision mit `rate_limits`/`co2_rate_limits` der anderen Tools. Migrationen bereits eingespielt.
+- **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` und `ALLOWED_ORIGINS` liegen unkritisch (durch RLS geschützt) in `.env.production` und sind bereits committet — Vercel übernimmt sie automatisch. `IP_SALT` und `REQUEST_TOKEN_SECRET` sind echte Secrets und müssen manuell in den Vercel-Projekteinstellungen (Settings → Environment Variables) gesetzt werden, danach einmal neu deployen.
+- **Domain**: `sanierungsrechner.energetisiert.de` noch nicht verknüpft — in Vercel unter Settings → Domains hinzufügen (zeigt den nötigen DNS-Eintrag), dann bei Hostinger setzen.

@@ -42,3 +42,5 @@ next-env.d.ts
 
 # Vorlage ohne echte Werte darf ins Repo
 !.env.example
+# Öffentliche, RLS-geschützte Werte — kein Geheimnis, siehe Kommentar in der Datei
+!.env.production
