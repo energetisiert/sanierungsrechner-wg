@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/*
+ * Markenfarben energetisiert. (energetisiert_brandguide_v1.1.html), identisch
+ * zum CO2-Aufteilungsrechner. --bg ist bewusst kein reines Weiß ("Papier"),
+ * --dark/--doc sind die beiden Grüntöne für Ergebnispanels bzw. Kopfzeilen-Band.
+ */
+:root {
+  --color-ac: #1f7a4d;
+  --color-ink: #141414;
+  --color-bg: #fbfbfa;
+  --color-tint: #f4f4f1;
+  --color-muted: #5c5c57;
+  --color-muted2: #8a8a84;
+  --color-strong: #33332f;
+  --color-dark: #14281e;
+  --color-doc: #1c3829;
+  --color-mint: #7fc9a2;
+  --color-warm: #e9917a;
+  --color-red: #c4472f;
+  --color-dark-label: #8ba79a;
+  --color-dark-body: #b9cec2;
+  --border-soft: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.12);
+}
+
+@theme inline {
+  --color-ac: var(--color-ac);
+  --color-ink: var(--color-ink);
+  --color-bg: var(--color-bg);
+  --color-tint: var(--color-tint);
+  --color-muted: var(--color-muted);
+  --color-muted2: var(--color-muted2);
+  --color-strong: var(--color-strong);
+  --color-dark: var(--color-dark);
+  --color-doc: var(--color-doc);
+  --color-mint: var(--color-mint);
+  --color-warm: var(--color-warm);
+  --color-red: var(--color-red);
+  --color-dark-label: var(--color-dark-label);
+  --color-dark-body: var(--color-dark-body);
+  --font-disp: var(--font-montserrat), Helvetica, Arial, sans-serif;
+  --font-body: var(--font-instrument-sans), Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-disp {
+  font-family: var(--font-disp);
+}
+
+.print-break-avoid {
+  break-inside: avoid;
+}
+
+/*
+ * Grün gestrichelte Felder signalisieren "automatisch aus Gewerke-Kosten-
+ * schätzung übernommen, überschreibbar" — gleiches Muster wie im CO2-Rechner.
+ */
+.input-auto {
+  background: #f1f6f3 !important;
+  border-style: dashed !important;
+  border-color: rgba(31, 122, 77, 0.32) !important;
+}
+
+/*
+ * Honeypot: für Menschen unsichtbar, für Bots ein normales Formularfeld.
+ * Bewusst nicht display:none, damit einfache Bots es weiterhin "sehen".
+ */
+.hp-field {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Druckausgabe 1:1 nach dem Vorbild des Heizlast-/Förder-/CO2-Rechners: die
+ * komplette interaktive Oberfläche wird ausgeblendet, stattdessen erscheint
+ * nur der eigens gebaute Druckreport (PrintReport.tsx) plus die Fußzeile.
+ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 16mm 14mm;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    padding-bottom: 0;
+  }
+  .fuss {
+    border-top: 2px solid var(--color-doc);
+    margin-top: 18px;
+    padding-top: 12px;
+  }
+}
