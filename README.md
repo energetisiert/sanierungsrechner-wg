@@ -59,8 +59,8 @@ Zero-Cookie-Strategie: keine Marketing- oder Tracking-Cookies, kein Cookie-Banne
 
 ## Deployment (Vercel) — Live-Stand
 
-- **GitHub**: [energetisiert/sanierungsrechner-wg](https://github.com/energetisiert/sanierungsrechner-wg) (privat), Produktionsbranch `main`.
-- **Vercel**: Projekt `sanierungsrechner-wg` im Team `energetisiert`, mit dem Repo verknüpft (Auto-Deploy bei jedem Push nach `main`). Aktuell live unter `https://sanierungsrechner-wg.vercel.app`.
+- **Live**: [https://sanierungsrechner.energetisiert.de](https://sanierungsrechner.energetisiert.de) (Domain bei Hostinger verknüpft) sowie `https://sanierungsrechner-wg.vercel.app`.
+- **GitHub**: [energetisiert/sanierungsrechner-wg](https://github.com/energetisiert/sanierungsrechner-wg) (privat), Produktionsbranch `main`. Vercel-GitHub-App hat Zugriff auf das Repo — Pushes nach `main` deployen automatisch.
+- **Vercel**: Projekt `sanierungsrechner-wg` im Team `energetisiert`, mit dem Repo verknüpft.
 - **Supabase**: Rate-Limiting läuft im geteilten Projekt **„foerderrechner"** (`gsmuqvjyfjtjbbxqmfgt`) statt in einem eigenen — spart die 10 $/Monat für ein dediziertes Projekt (bewusste Entscheidung, s. Kostenabfrage). Eigener Tabellen-/Funktionsname `sanierung_*`, keine Kollision mit `rate_limits`/`co2_rate_limits` der anderen Tools. Migrationen bereits eingespielt.
-- **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` und `ALLOWED_ORIGINS` liegen unkritisch (durch RLS geschützt) in `.env.production` und sind bereits committet — Vercel übernimmt sie automatisch. `IP_SALT` und `REQUEST_TOKEN_SECRET` sind echte Secrets und müssen manuell in den Vercel-Projekteinstellungen (Settings → Environment Variables) gesetzt werden, danach einmal neu deployen.
-- **Domain**: `sanierungsrechner.energetisiert.de` noch nicht verknüpft — in Vercel unter Settings → Domains hinzufügen (zeigt den nötigen DNS-Eintrag), dann bei Hostinger setzen.
+- **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` und `ALLOWED_ORIGINS` liegen unkritisch (durch RLS geschützt) in `.env.production` und sind committet — Vercel übernimmt sie automatisch. `IP_SALT` und `REQUEST_TOKEN_SECRET` sind echte Secrets und liegen ausschließlich als Vercel Environment Variables (Settings → Environment Variables), nie im Repo.
