@@ -1,3 +1,5 @@
+import 'server-only';
+
 import type {
   EhStufe,
   IsfpVergleich,
@@ -17,7 +19,9 @@ import type {
  * Förderung 2026 energetisiert" (siehe engine.test.ts, portiert aus
  * foerderlogik.test.js). Frei von DOM-Zugriffen; wird ausschließlich
  * serverseitig aufgerufen (app/rechner/actions.ts) — Sätze, Deckel und
- * Formeln verlassen den Server nie.
+ * Formeln verlassen den Server nie. Der 'server-only'-Import lässt jeden
+ * Build hart fehlschlagen, der diese Datei versehentlich aus einer
+ * Client-Komponente importiert.
  *
  * Rechtsstand: BEG-Reform 08.07.2026 (Haushaltsausschuss) / Inkrafttreten
  * 21.07.2026. Finale Förderrichtlinie noch nicht im Bundesanzeiger

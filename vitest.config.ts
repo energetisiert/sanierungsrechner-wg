@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -9,5 +10,13 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
+  },
+  resolve: {
+    alias: {
+      // engine.ts importiert 'server-only' als Bundling-Schutz; im Node-
+      // Testlauf gibt es keinen React-Server-Kontext, daher wird das Paket
+      // hier gestubbt (matcht das gleiche Muster in Gebäudeabgrenzung).
+      'server-only': path.resolve(__dirname, 'src/test/server-only-stub.ts'),
+    },
   },
 });

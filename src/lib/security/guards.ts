@@ -17,11 +17,11 @@ import { createClient } from '@supabase/supabase-js';
  * Vercel BotID (checkBotId) und das signierte Request-Token laufen zusätzlich
  * direkt in app/rechner/actions.ts.
  *
- * Rate-Limit-RPC ohne Service-Role-Key (einheitlich mit dem CO2-/Förder-
- * rechner-Muster): sanierung_rate_limit_hit ist SECURITY DEFINER und
- * zählt/prüft atomar serverseitig, EXECUTE ist an anon/authenticated gewährt
- * (siehe Migration 002_..._ohne_service_role.sql) — der publishable/anon Key
- * reicht, ein zusätzliches Admin-Secret ist für dieses Projekt nicht nötig.
+ * Rate-Limit-RPC ohne Service-Role-Key (einheitlich mit allen anderen
+ * Tools): rate_limit_hit ist die geteilte SECURITY DEFINER Funktion (Migration
+ * rate_limit_consolidation) und zählt/prüft atomar serverseitig, EXECUTE ist
+ * an anon/authenticated gewährt — der publishable/anon Key reicht, ein
+ * zusätzliches Admin-Secret ist für dieses Projekt nicht nötig.
  */
 
 const RATE_LIMIT_PER_MINUTE = 60;
@@ -47,11 +47,18 @@ export async function origenErlaubt(): Promise<boolean> {
   return erlaubt.some((o) => origin === o || origin.startsWith(`${o}/`));
 }
 
-/** SHA-256(IP + Salt) — die Klartext-IP verlässt diese Funktion nie. */
-export async function ipHash(): Promise<string> {
+/**
+ * SHA-256(IP + Salt) — die Klartext-IP verlässt diese Funktion nie.
+ * Ohne IP_SALT null statt mit einem im Quellcode sichtbaren Ersatzwert zu
+ * hashen: ein fester, oeffentlich bekannter Salt liesse sich fuer den
+ * gesamten IPv4-Adressraum in Sekunden zurueckrechnen und wuerde die
+ * DSGVO-Zusage "keine Klartext-IPs" unterlaufen.
+ */
+export async function ipHash(): Promise<string | null> {
+  const salt = process.env.IP_SALT;
+  if (!salt) return null;
   const h = await headers();
   const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip') || 'unbekannt';
-  const salt = process.env.IP_SALT ?? 'sanierungsrechner-dev-salt';
   return createHash('sha256').update(ip + salt).digest('hex');
 }
 
@@ -83,13 +90,19 @@ function bumpInMemory(hash: string): boolean {
  * konfiguriertes Supabase oder bei einem RPC-Fehler greift der In-Memory-
  * Zähler, statt den Rechner ganz ungebremst laufen zu lassen.
  */
-export async function rateLimitOk(hash: string): Promise<boolean> {
+export async function rateLimitOk(hash: string | null): Promise<boolean> {
+  if (!hash) {
+    console.warn('IP_SALT nicht gesetzt — Rate-Limiting übersprungen.');
+    return true;
+  }
   const supabase = supabaseFuerRateLimit();
   if (!supabase) return bumpInMemory(hash);
 
-  const { data, error } = await supabase.rpc('sanierung_rate_limit_hit', {
+  const { data, error } = await supabase.rpc('rate_limit_hit', {
+    p_scope: 'sanierungsrechner',
     p_ip_hash: hash,
     p_limit: RATE_LIMIT_PER_MINUTE,
+    p_window_seconds: 60,
   });
 
   if (error) {

@@ -26,6 +26,10 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef(initialToken);
   const honeypotRef = useRef<HTMLInputElement>(null);
+  // Zaehlt jeden gestarteten Berechnungslauf durch -- verhindert, dass eine
+  // spaeter aufgeloeste, aeltere Antwort ein bereits aktuelleres Ergebnis
+  // ueberschreibt.
+  const generationRef = useRef(0);
 
   function patch(partial: Partial<FormState>) {
     setForm((prev) => ({ ...prev, ...partial }));
@@ -34,27 +38,43 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
+      const generation = ++generationRef.current;
       startTransition(async () => {
-        const input = toInput(form);
-        const wirtschaftlichkeitEingabe = toWirtschaftlichkeitEingabe(form);
-        const websiteUrl = honeypotRef.current?.value;
-        let antwort = await berechneSanierungAction(input, wirtschaftlichkeitEingabe, tokenRef.current, websiteUrl);
+        try {
+          const input = toInput(form);
+          const wirtschaftlichkeitEingabe = toWirtschaftlichkeitEingabe(form);
+          const websiteUrl = honeypotRef.current?.value;
+          let antwort = await berechneSanierungAction(input, wirtschaftlichkeitEingabe, tokenRef.current, websiteUrl);
 
-        // Token abgelaufen oder noch keins ausgestellt → einmalig frisches holen und wiederholen.
-        if (antwort.status === 'token') {
-          const frisch = await holeToken();
-          if (frisch) {
-            tokenRef.current = frisch;
-            antwort = await berechneSanierungAction(input, wirtschaftlichkeitEingabe, frisch, websiteUrl);
+          // Token abgelaufen oder noch keins ausgestellt → einmalig frisches holen und wiederholen.
+          if (antwort.status === 'token') {
+            const frisch = await holeToken();
+            if (frisch) {
+              tokenRef.current = frisch;
+              antwort = await berechneSanierungAction(input, wirtschaftlichkeitEingabe, frisch, websiteUrl);
+            }
           }
-        }
 
-        if (antwort.status === 'ok') {
-          setErgebnis(antwort.ergebnis);
-          setWirtschaftlichkeit(antwort.wirtschaftlichkeit);
-          setBlocked(false);
-        } else {
-          setBlocked(true);
+          // Waehrenddessen ist bereits ein neuerer Lauf gestartet -- diese
+          // Antwort ist veraltet und darf das aktuellere Ergebnis nicht mehr
+          // ueberschreiben.
+          if (generation !== generationRef.current) return;
+
+          if (antwort.status === 'ok') {
+            setErgebnis(antwort.ergebnis);
+            setWirtschaftlichkeit(antwort.wirtschaftlichkeit);
+            setBlocked(false);
+          } else {
+            setBlocked(true);
+          }
+        } catch (e) {
+          // Netzwerkfehler, Timeout o.ae.: ohne diesen Catch bliebe der
+          // Fehler unbehandelt und der Nutzer saehe nur ein staendig
+          // ladendes Panel ohne jede Rueckmeldung.
+          if (generation === generationRef.current) {
+            console.error('Berechnung fehlgeschlagen:', e);
+            setBlocked(true);
+          }
         }
       });
     }, DEBOUNCE_MS);

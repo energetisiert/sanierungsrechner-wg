@@ -3,9 +3,10 @@
  * Sanierungskosten je Kostenfeld der Förderberechnung. 1:1-Portierung der
  * GEWERKE-Stammdaten aus foerderlogik.js. Marktpreise, keine Förderdaten —
  * dient ausschließlich der Kostenschätzung, nicht der Förderlogik in
- * engine.ts. Läuft wie die Förderlogik ausschließlich serverseitig
- * (app/rechner/actions.ts), damit Kalkulationsgrundlagen nicht Teil des
- * Client-Bundles werden.
+ * engine.ts. Anders als engine.ts/params.ts BEWUSST client-seitig nutzbar:
+ * GewerkeKostenCard.tsx (Client Component) zeigt und bearbeitet diese
+ * Richtwerte direkt im Formular, es sind generische Marktpreis-Richtwerte,
+ * keine geschützte Förderlogik.
  */
 
 /** In welches Kostenfeld der LiegenschaftInput eine Position einzahlt. 'informativ' = zählt in keine Förderberechnung (z. B. PV: 0 % MwSt., keine BEG-Förderung). */

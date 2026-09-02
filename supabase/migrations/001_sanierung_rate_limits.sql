@@ -7,9 +7,14 @@
 -- über den Service-Role-Key; für anon/authenticated ist die Tabelle durch
 -- RLS ohne Policies vollständig gesperrt.
 --
--- Eigenes Supabase-Projekt, analog zum CO2-Aufteilungsrechner (dort wurde
--- die anfangs im geteilten Förderrechner-Projekt angelegte Zwischenlösung
--- zurückgebaut — hier von Anfang an ein eigenständiges Projekt).
+-- ACHTUNG (Stand 2026-09-02): Dieser Absatz war von Anfang an falsch bzw.
+-- ist inzwischen ueberholt -- es gibt kein eigenstaendiges Projekt. Die App
+-- verwendet ausschliesslich das geteilte Projekt "foerderrechner" (gleiche
+-- NEXT_PUBLIC_SUPABASE_URL wie proxy.ts fuer zugriffsstatus() und
+-- guards.ts fuer das Rate-Limiting), diese Tabelle liegt also im selben
+-- Projekt wie Auth/Entitlement-Daten. Seit der Rate-Limit-Konsolidierung
+-- laeuft die Zaehlung zudem ueber die geteilte Funktion
+-- public.rate_limit_hit() statt ueber sanierung_rate_limit_hit() unten.
 
 create table if not exists public.sanierung_rate_limits (
   id             uuid primary key default gen_random_uuid(),
