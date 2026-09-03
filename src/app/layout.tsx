@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Instrument_Sans, Montserrat } from 'next/font/google';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
@@ -19,6 +19,17 @@ export const metadata: Metadata = {
   title: 'Sanierungsrechner WG — energetisiert.',
   description:
     'Sanierungskosten schätzen und die günstigste Förderung finden: BEG-Einzelmaßnahmen, KfW 458, KfW 261 und Steuerbonus § 35c im direkten Vergleich.',
+};
+
+// Ohne dieses explizite viewport-Meta behandeln mobile Browser die Seite wie
+// eine ~980px breite Desktop-Seite und skalieren sie insgesamt herunter --
+// dadurch wirkt alles verkleinert und schlecht zentriert. userScalable:false
+// unterbindet zusaetzlich Pinch-Zoom in beide Richtungen (Produktentscheidung).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
