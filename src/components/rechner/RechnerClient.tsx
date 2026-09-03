@@ -9,6 +9,7 @@ import { FoerderprofilCard } from './FoerderprofilCard';
 import { GewerkeKostenCard } from './GewerkeKostenCard';
 import { KostenCard } from './KostenCard';
 import { WirtschaftlichkeitCard } from './WirtschaftlichkeitCard';
+import { EigentuemerwechselCard } from './EigentuemerwechselCard';
 import { HinweiseAccordion } from './HinweiseAccordion';
 import { ResultPanel } from './ResultPanel';
 import { MobileResultBar } from './MobileResultBar';
@@ -104,6 +105,7 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
           <GewerkeKostenCard onChange={patch} />
           <KostenCard form={form} onChange={patch} />
           <WirtschaftlichkeitCard form={form} onChange={patch} />
+          <EigentuemerwechselCard wohneinheitenStandard={form.we} />
           <HinweiseAccordion />
         </div>
 

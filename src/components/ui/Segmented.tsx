@@ -6,7 +6,8 @@ interface SegmentedOption<T extends string> {
 }
 
 interface SegmentedProps<T extends string> {
-  value: T;
+  /** null = noch keine Auswahl getroffen (kein Button aktiv), z.B. bei einer Frage ohne sinnvollen Vorgabewert. */
+  value: T | null;
   onChange: (value: T) => void;
   options: readonly SegmentedOption<T>[];
   'aria-label': string;
