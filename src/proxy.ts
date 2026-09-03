@@ -12,7 +12,7 @@ const HUB_URL = 'https://tools.energetisiert.de';
  * Zugriffskontrolle vor jeder Seite dieses Tools: Session vorhanden? Konto
  * freigeschaltet? Enthaelt das gebuchte Paket dieses Tool? Sonst Redirect
  * zum Hub. Live-Pruefung per RPC (zugriffsstatus(), im gemeinsamen
- * Supabase-Projekt "foerderrechner") -- NICHT der JWT-Claim aus dem Custom
+ * Supabase-Projekt "Tool Hub energetisiert.") -- NICHT der JWT-Claim aus dem Custom
  * Access Token Hook, der bis zu ~1h veraltet sein kann. Ein
  * Middleware-Redirect IST Datenzugriffskontrolle, hier gilt dieselbe Regel
  * wie fuer RLS: immer live pruefen, nie dem Claim vertrauen.

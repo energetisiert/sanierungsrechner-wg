@@ -9,7 +9,7 @@
 --
 -- ACHTUNG (Stand 2026-09-02): Dieser Absatz war von Anfang an falsch bzw.
 -- ist inzwischen ueberholt -- es gibt kein eigenstaendiges Projekt. Die App
--- verwendet ausschliesslich das geteilte Projekt "foerderrechner" (gleiche
+-- verwendet ausschliesslich das geteilte Projekt "Tool Hub energetisiert." (gleiche
 -- NEXT_PUBLIC_SUPABASE_URL wie proxy.ts fuer zugriffsstatus() und
 -- guards.ts fuer das Rate-Limiting), diese Tabelle liegt also im selben
 -- Projekt wie Auth/Entitlement-Daten. Seit der Rate-Limit-Konsolidierung

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 
 /**
- * Schuetzt die geteilte Postgres-Datenbank ("foerderrechner") vor Flut-
+ * Schuetzt die geteilte Postgres-Datenbank ("Tool Hub energetisiert.") vor Flut-
  * Anfragen, BEVOR proxy.ts getUser()/die zugriffsstatus()-RPC aufruft. Zwei
  * Stufen:
  *
