@@ -47,6 +47,19 @@ export async function origenErlaubt(): Promise<boolean> {
   return erlaubt.some((o) => origin === o || origin.startsWith(`${o}/`));
 }
 
+/*
+ * Zur Client-IP: `x-forwarded-for` wird auf Vercel von der Plattform gesetzt
+ * und NICHT vom Client durchgereicht -- eingehende Werte verwirft Vercel, um
+ * Spoofing zu verhindern (vercel.com/docs/headers/request-headers). Deshalb
+ * ist hier der erste Eintrag die echte Client-IP und ein Angreifer kann sich
+ * KEINEN frischen Rate-Limit-Zaehler erschleichen.
+ *
+ * Wichtig, falls dieses Tool je hinter einen eigenen Reverse Proxy (nginx,
+ * Traefik, Cloudflare-Tunnel) wandert: dort haengt jeder Hop rechts an, der
+ * linke Eintrag ist dann frei waehlbar und diese Auswertung muesste von
+ * RECHTS zaehlen (Anzahl eigener Proxys als Env-Wert). Nicht vorsorglich
+ * eingebaut -- ein zu hoch gesetzter Wert waere schlimmer als keiner.
+ */
 /**
  * SHA-256(IP + Salt) — die Klartext-IP verlässt diese Funktion nie.
  * Ohne IP_SALT null statt mit einem im Quellcode sichtbaren Ersatzwert zu
@@ -76,7 +89,14 @@ function bumpInMemory(hash: string): boolean {
   const fenster = Math.floor(Date.now() / 60_000);
   const eintrag = speicher.get(hash);
   if (!eintrag || eintrag.fenster !== fenster) {
-    if (speicher.size > 10_000) speicher.clear();
+    // Erst die Eintraege aus vergangenen Minutenfenstern wegwerfen; nur wenn
+    // das nicht reicht, die Map ganz leeren (siehe proxy-guard.ts).
+    if (speicher.size > 10_000) {
+      for (const [schluessel, wert] of speicher) {
+        if (wert.fenster !== fenster) speicher.delete(schluessel);
+      }
+      if (speicher.size > 10_000) speicher.clear();
+    }
     speicher.set(hash, { fenster, anzahl: 1 });
     return true;
   }
