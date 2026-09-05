@@ -1,11 +1,34 @@
 'use client';
 
-import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Field, TextInput } from '@/components/ui/Field';
 import { Segmented } from '@/components/ui/Segmented';
 
-type JaNeinUnklar = 'ja' | 'nein' | 'unklar';
+export type JaNeinUnklar = 'ja' | 'nein' | 'unklar';
+
+/** Alle Angaben der Sonderpruefung -- liegt im RechnerClient, damit
+ *  "Gespeicherte Gebaeude" sie mitnimmt (frueher nur lokaler Karten-State). */
+export interface EigentuemerwechselState {
+  wohneinheiten: string;
+  selbstbewohnt2002: JaNeinUnklar | null;
+  ersterEigentuemer: JaNeinUnklar | null;
+  uebertragungsdatum: string;
+  erbschaft: boolean;
+  deckeGedaemmt: JaNeinUnklar | null;
+  leitungenGedaemmt: JaNeinUnklar | null;
+}
+
+export function eigentuemerwechselStandard(wohneinheiten: string): EigentuemerwechselState {
+  return {
+    wohneinheiten,
+    selbstbewohnt2002: null,
+    ersterEigentuemer: null,
+    uebertragungsdatum: '',
+    erbschaft: false,
+    deckeGedaemmt: null,
+    leitungenGedaemmt: null,
+  };
+}
 
 const JA_NEIN_UNKLAR_OPTIONEN = [
   { value: 'ja' as const, label: 'Ja' },
@@ -81,14 +104,23 @@ function KomponentenErgebnis({ label, zustand }: { label: string; zustand: JaNei
   );
 }
 
-export function EigentuemerwechselCard({ wohneinheitenStandard }: { wohneinheitenStandard: string }) {
-  const [wohneinheiten, setWohneinheiten] = useState(wohneinheitenStandard);
-  const [selbstbewohnt2002, setSelbstbewohnt2002] = useState<JaNeinUnklar | null>(null);
-  const [ersterEigentuemer, setErsterEigentuemer] = useState<JaNeinUnklar | null>(null);
-  const [uebertragungsdatum, setUebertragungsdatum] = useState('');
-  const [erbschaft, setErbschaft] = useState(false);
-  const [deckeGedaemmt, setDeckeGedaemmt] = useState<JaNeinUnklar | null>(null);
-  const [leitungenGedaemmt, setLeitungenGedaemmt] = useState<JaNeinUnklar | null>(null);
+export function EigentuemerwechselCard({
+  zustand,
+  onChange,
+}: {
+  zustand: EigentuemerwechselState;
+  onChange: (zustand: EigentuemerwechselState) => void;
+}) {
+  const { wohneinheiten, selbstbewohnt2002, ersterEigentuemer, uebertragungsdatum, erbschaft, deckeGedaemmt, leitungenGedaemmt } =
+    zustand;
+  const aendern = (patch: Partial<EigentuemerwechselState>) => onChange({ ...zustand, ...patch });
+  const setWohneinheiten = (v: string) => aendern({ wohneinheiten: v });
+  const setSelbstbewohnt2002 = (v: JaNeinUnklar | null) => aendern({ selbstbewohnt2002: v });
+  const setErsterEigentuemer = (v: JaNeinUnklar | null) => aendern({ ersterEigentuemer: v });
+  const setUebertragungsdatum = (v: string) => aendern({ uebertragungsdatum: v });
+  const setErbschaft = (v: boolean) => aendern({ erbschaft: v });
+  const setDeckeGedaemmt = (v: JaNeinUnklar | null) => aendern({ deckeGedaemmt: v });
+  const setLeitungenGedaemmt = (v: JaNeinUnklar | null) => aendern({ leitungenGedaemmt: v });
 
   const we = Math.max(1, Math.round(Number(wohneinheiten)) || 1);
   const fall = ermittleWechselfall(we, selbstbewohnt2002, ersterEigentuemer);

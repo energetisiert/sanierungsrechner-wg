@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { SanierungsErgebnis, WirtschaftlichkeitErgebnis } from '@/lib/calculator/types';
 
 function formatEuro(n: number): string {
@@ -47,12 +48,15 @@ export function ResultPanel({
   blocked,
   isPending,
   onReset,
+  extra,
 }: {
   ergebnis: SanierungsErgebnis | null;
   wirtschaftlichkeit: WirtschaftlichkeitErgebnis | null;
   blocked: boolean;
   isPending: boolean;
   onReset: () => void;
+  /** Zusatz-Aktion unter dem PDF-Button (z. B. "Gebäude speichern"). */
+  extra?: ReactNode;
 }) {
   return (
     <div className="print-break-avoid rounded-[24px] bg-dark p-5 text-dark-body sm:p-6">
@@ -118,6 +122,7 @@ export function ResultPanel({
           >
             Als PDF drucken
           </button>
+          {extra}
         </>
       )}
 

@@ -9,17 +9,32 @@ import { FoerderprofilCard } from './FoerderprofilCard';
 import { GewerkeKostenCard } from './GewerkeKostenCard';
 import { KostenCard } from './KostenCard';
 import { WirtschaftlichkeitCard } from './WirtschaftlichkeitCard';
-import { EigentuemerwechselCard } from './EigentuemerwechselCard';
+import { EigentuemerwechselCard, eigentuemerwechselStandard, type EigentuemerwechselState } from './EigentuemerwechselCard';
 import { HinweiseAccordion } from './HinweiseAccordion';
 import { ResultPanel } from './ResultPanel';
 import { MobileResultBar } from './MobileResultBar';
 import { PrintReport } from './PrintReport';
+import { GespeicherteGebaeude } from './GespeicherteGebaeude';
 
 /** Debounce-Dauer für die Echtzeit-Berechnung; es gibt keinen Berechnen-Knopf. */
 const DEBOUNCE_MS = 250;
 
+/** Kompletter Eingabezustand fuer "Gespeicherte Gebaeude". Die Mengen der
+ *  Gewerke-Kostenschaetzung und die Angaben der Eigentuemerwechsel-Pruefung
+ *  lagen frueher nur in den Karten selbst -- ohne sie hier hochzuziehen
+ *  gingen sie beim Speichern verloren. */
+interface GespeichertePayload {
+  form: FormState;
+  gewerkeMengen: Record<string, string>;
+  eigentuemerwechsel: EigentuemerwechselState;
+}
+
 export function RechnerClient({ initialToken }: { initialToken: string }) {
   const [form, setForm] = useState<FormState>(STANDARD_FORM);
+  const [gewerkeMengen, setGewerkeMengen] = useState<Record<string, string>>({});
+  const [eigentuemerwechsel, setEigentuemerwechsel] = useState<EigentuemerwechselState>(() =>
+    eigentuemerwechselStandard(STANDARD_FORM.we),
+  );
   const [ergebnis, setErgebnis] = useState<SanierungsErgebnis | null>(null);
   const [wirtschaftlichkeit, setWirtschaftlichkeit] = useState<WirtschaftlichkeitErgebnis | null>(null);
   const [blocked, setBlocked] = useState(false);
@@ -34,6 +49,20 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
 
   function patch(partial: Partial<FormState>) {
     setForm((prev) => ({ ...prev, ...partial }));
+  }
+
+  function zuruecksetzen() {
+    setForm(STANDARD_FORM);
+    setGewerkeMengen({});
+    setEigentuemerwechsel(eigentuemerwechselStandard(STANDARD_FORM.we));
+  }
+
+  function gespeichertesLaden(p: GespeichertePayload) {
+    // Mit den Standardwerten mischen: ein aelterer Speicherstand ohne
+    // spaeter hinzugekommene Felder bleibt so ladbar.
+    setForm({ ...STANDARD_FORM, ...p.form });
+    setGewerkeMengen(p.gewerkeMengen ?? {});
+    setEigentuemerwechsel({ ...eigentuemerwechselStandard(p.form?.we ?? STANDARD_FORM.we), ...p.eigentuemerwechsel });
   }
 
   useEffect(() => {
@@ -102,10 +131,10 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
 
           <LiegenschaftCard form={form} onChange={patch} />
           <FoerderprofilCard form={form} onChange={patch} />
-          <GewerkeKostenCard onChange={patch} />
+          <GewerkeKostenCard mengen={gewerkeMengen} onMengen={setGewerkeMengen} onChange={patch} />
           <KostenCard form={form} onChange={patch} />
           <WirtschaftlichkeitCard form={form} onChange={patch} />
-          <EigentuemerwechselCard wohneinheitenStandard={form.we} />
+          <EigentuemerwechselCard zustand={eigentuemerwechsel} onChange={setEigentuemerwechsel} />
           <HinweiseAccordion />
         </div>
 
@@ -115,7 +144,14 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
             wirtschaftlichkeit={wirtschaftlichkeit}
             blocked={blocked}
             isPending={isPending}
-            onReset={() => setForm(STANDARD_FORM)}
+            onReset={zuruecksetzen}
+            extra={
+              <GespeicherteGebaeude<GespeichertePayload>
+                aktuellesPayload={{ form, gewerkeMengen, eigentuemerwechsel }}
+                onLaden={gespeichertesLaden}
+                triggerClassName="mb-2 w-full rounded-full border border-white/20 px-4 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:border-mint hover:text-mint"
+              />
+            }
           />
         </div>
 

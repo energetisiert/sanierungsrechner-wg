@@ -28,9 +28,18 @@ function formatEuro(n: number): string {
   return n.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
 }
 
-export function GewerkeKostenCard({ onChange }: { onChange: (partial: Partial<FormState>) => void }) {
+export function GewerkeKostenCard({
+  mengen,
+  onMengen,
+  onChange,
+}: {
+  /** Eingetragene Mengen je Position (Key `${kategorie.titel}-${index}`) --
+   *  liegt im RechnerClient, damit "Gespeicherte Gebaeude" sie mitnimmt. */
+  mengen: Record<string, string>;
+  onMengen: (mengen: Record<string, string>) => void;
+  onChange: (partial: Partial<FormState>) => void;
+}) {
   const [offen, setOffen] = useState(false);
-  const [mengen, setMengen] = useState<Record<string, string>>({});
 
   const summen = useMemo(() => {
     const ziel: Record<string, number> = {};
@@ -99,7 +108,7 @@ export function GewerkeKostenCard({ onChange }: { onChange: (partial: Partial<Fo
                         step={0.1}
                         placeholder={`Menge (${pos.einheit})`}
                         value={mengen[key] ?? ''}
-                        onChange={(e) => setMengen((m) => ({ ...m, [key]: e.target.value }))}
+                        onChange={(e) => onMengen({ ...mengen, [key]: e.target.value })}
                         className="col-span-2 w-full rounded-lg border border-strong/40 bg-white px-2.5 py-1.5 text-[13.5px] outline-none focus:border-ac sm:col-span-1"
                       />
                     </div>
