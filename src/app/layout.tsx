@@ -3,6 +3,7 @@ import { Instrument_Sans, Montserrat } from 'next/font/google';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import './globals.css';
+import { IdleLogout } from '@/components/IdleLogout';
 
 const montserrat = Montserrat({
   variable: '--font-montserrat',
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         {/* Platz fuer die feste mobile Ergebnisleiste (MobileResultBar, lg:hidden) --
             ohne diesen Abstand ueberdeckt sie den Footer, weil nur <main> pb-28 traegt. */}
         <div className="h-24 lg:hidden" aria-hidden="true" />
+        <IdleLogout />
       </body>
     </html>
   );

@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { hatSsoSessionCookie, rpcRateLimitUeberschritten } from '@/lib/security/proxy-guard';
+import {
+  aktivitaetMarkieren, hatSsoSessionCookie, inaktivitaetAbgelaufen, rpcRateLimitUeberschritten, sessionCookiesLoeschen,
+} from '@/lib/security/proxy-guard';
 import { ausCacheLesen, inCacheSchreiben } from '@/lib/security/zugriffs-cache';
 import { ssoCookieOptions } from '@/lib/supabase/cookie-options';
 import type { Zugriffsstatus } from '@/lib/supabase/zugriffsstatus';
@@ -27,6 +29,7 @@ function antwortAusZustand(zustand: Zugriffsstatus | null, request: NextRequest,
   if (!zustand.hat_zugriff) {
     return NextResponse.redirect(`${HUB_URL}/kein-zugriff?tool=${TOOL_SLUG}`);
   }
+  aktivitaetMarkieren(request, response, request.headers.get('host')?.split(':')[0]);
   return response;
 }
 
@@ -38,6 +41,14 @@ export async function proxy(request: NextRequest) {
   }
   if (rpcRateLimitUeberschritten(request)) {
     return new NextResponse('Zu viele Anfragen.', { status: 429 });
+  }
+
+  // 30 Minuten ohne Anfrage an irgendeine App der Suite: Session beenden und
+  // mit Hinweis zum Login (Details in proxy-guard.ts / components/IdleLogout.tsx).
+  if (inaktivitaetAbgelaufen(request)) {
+    const abgemeldet = NextResponse.redirect(`${HUB_URL}/login?hinweis=inaktiv&redirect_to=${encodeURIComponent(request.url)}`);
+    sessionCookiesLoeschen(request, abgemeldet, host);
+    return abgemeldet;
   }
 
   // Live-Rechner ohne Berechnen-Knopf: bei aktivem Tippen ruft jede 250ms
