@@ -14,7 +14,10 @@ import { HinweiseAccordion } from './HinweiseAccordion';
 import { ResultPanel } from './ResultPanel';
 import { MobileResultBar } from './MobileResultBar';
 import { PrintReport } from './PrintReport';
-import { GespeicherteGebaeude } from './GespeicherteGebaeude';
+import { GebaeudeSpeichern } from './GebaeudeSpeichern';
+import { GebaeudeBanner } from './GebaeudeBanner';
+import { useGebaeudeKontext } from './useGebaeudeKontext';
+import { ausStammdaten, inStammdaten } from '@/lib/gebaeude/adapter';
 
 /** Debounce-Dauer für die Echtzeit-Berechnung; es gibt keinen Berechnen-Knopf. */
 const DEBOUNCE_MS = 250;
@@ -64,6 +67,24 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
     setGewerkeMengen(p.gewerkeMengen ?? {});
     setEigentuemerwechsel({ ...eigentuemerwechselStandard(p.form?.we ?? STANDARD_FORM.we), ...p.eigentuemerwechsel });
   }
+
+  /* Studio: per ?gebaeude=<id> geoeffnet -- eigenen Knoten laden, sonst aus den Stammdaten vorbelegen. */
+  const [gebaeudeModus, setGebaeudeModus] = useState<'geladen' | 'vorbelegt' | undefined>(undefined);
+  const { kontext: gebaeude, fehler: gebaeudeFehler } = useGebaeudeKontext((k) => {
+    const knoten = k.detail.knoten.find((n) => n.tool_slug === 'sanierungsrechner');
+    if (knoten) {
+      gespeichertesLaden(knoten.eingaben as GespeichertePayload);
+      setGebaeudeModus('geladen');
+    } else {
+      setForm((prev) => ({ ...prev, ...ausStammdaten(k.detail.gebaeude.stammdaten) }));
+      setGebaeudeModus('vorbelegt');
+    }
+  });
+
+  /** Kennzahlen fuer die Gebaeudekarte im Studio. */
+  const zusammenfassung: Record<string, unknown> = ergebnis
+    ? { foerderung_eur: ergebnis.bestesFoerderErgebnis, variante: ergebnis.empfohleneVariante, foerderquote: ergebnis.foerderquote }
+    : {};
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -129,6 +150,7 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
             defaultValue=""
           />
 
+          <GebaeudeBanner kundenname={gebaeude?.kundenname} objektadresse={gebaeude?.objektadresse} modus={gebaeudeModus} fehler={gebaeudeFehler} />
           <LiegenschaftCard form={form} onChange={patch} />
           <FoerderprofilCard form={form} onChange={patch} />
           <GewerkeKostenCard mengen={gewerkeMengen} onMengen={setGewerkeMengen} onChange={patch} />
@@ -146,9 +168,13 @@ export function RechnerClient({ initialToken }: { initialToken: string }) {
             isPending={isPending}
             onReset={zuruecksetzen}
             extra={
-              <GespeicherteGebaeude<GespeichertePayload>
+              <GebaeudeSpeichern<GespeichertePayload>
+                toolSlug="sanierungsrechner"
                 aktuellesPayload={{ form, gewerkeMengen, eigentuemerwechsel }}
                 onLaden={gespeichertesLaden}
+                stammdaten={inStammdaten(form)}
+                ergebnis={zusammenfassung}
+                aktivesGebaeudeId={gebaeude?.id}
                 triggerClassName="mb-2 w-full rounded-full border border-white/20 px-4 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:border-mint hover:text-mint"
               />
             }
