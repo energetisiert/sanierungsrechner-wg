@@ -39,6 +39,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <SiteHeader />
         {children}
         <SiteFooter />
+        {/* Platz fuer die feste mobile Ergebnisleiste (MobileResultBar, lg:hidden) --
+            ohne diesen Abstand ueberdeckt sie den Footer, weil nur <main> pb-28 traegt. */}
+        <div className="h-24 lg:hidden" aria-hidden="true" />
       </body>
     </html>
   );
