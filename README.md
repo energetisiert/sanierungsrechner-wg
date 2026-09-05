@@ -39,7 +39,7 @@ npm run typecheck
 
 Die Förderlogik ist die eigenständige Implementierung der öffentlichen Förderregeln von BAFA, KfW und BMF (BEG EM, KfW 458/261, § 35c EStG), Rechtsstand BEG-Reform 08.07.2026 / Inkrafttreten 21.07.2026 — 1:1 identisch zur Excel-Referenz „Kundendokument Sanierung & Förderung 2026 energetisiert" und regressionsgetestet dagegen. Details, Korrekturen gegenüber der Vorversion und bekannte offene Punkte: `../../Wirtschaftlichkeitsrechner/README_Sanierungsrechner.md`.
 
-Bekannte Unsicherheiten (Stand der finalen BEG-Richtlinie im Bundesanzeiger, WPB für Einzelmaßnahmen ab Q1/2027, EU-Wärmepumpen-Wertschöpfungsbonus, eine nicht bestätigte 3-Jahres-Sperrfrist) sind zusätzlich im Rechner selbst unter „Bekannte Unsicherheiten & offene Punkte" dokumentiert.
+Rechtsstand: Richtlinie BEG EM vom 17.07.2026 (Bundesanzeiger-Fassung vom 17.08.2026, BAnz AT 27.08.2026 B1, rückwirkend ab 21.07.2026) und Richtlinie BEG WG vom 17.07.2026, primärquellen-geprüft am 05.09.2026. Noch offene Punkte (WPB-Bonus für Einzelmaßnahmen und EU-Wertschöpfungsbonus ab Q1/2027, SerSan EH 70 EE laut KfW ab Ende September 2026 beantragbar) sind im Rechner unter „Rechtsstand & offene Punkte" dokumentiert. Eine früher berichtete 3-Jahres-Sperrfrist zwischen Einzelmaßnahmen- und Effizienzhausförderung steht in keiner Richtlinie; es gilt der Ausschluss der Doppelförderung für dieselbe Maßnahme (RL BEG EM Nr. 8.6).
 
 ## Security-Architektur (Anti-Scraping)
 

@@ -2,21 +2,29 @@ export function HinweiseAccordion() {
   return (
     <details className="print-break-avoid rounded-[20px] border border-black/[0.08] bg-white p-[18px] sm:p-[22px]">
       <summary className="cursor-pointer font-disp text-[15px] font-bold text-ink">
-        Bekannte Unsicherheiten &amp; offene Punkte
+        Rechtsstand &amp; offene Punkte
       </summary>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] leading-[1.55] text-muted">
         <li>
-          Die finale BEG-Richtlinie ist noch nicht im Bundesanzeiger veröffentlicht. Alle Sätze und Deckel basieren auf
-          BAFA-Merkblättern, dem KfW-Merkblatt 261 und Fachportalen, Stand Juli/August 2026 — vor einer Antragstellung gegen die dann
-          veröffentlichte Förderrichtlinie gegenprüfen.
+          Rechtsstand: Richtlinie BEG EM vom 17.07.2026 (Bundesanzeiger-Fassung vom 17.08.2026, BAnz AT 27.08.2026 B1,
+          rückwirkend ab 21.07.2026), Richtlinie BEG WG vom 17.07.2026 sowie KfW-Merkblätter 458 und 261 (Stand 07/2026).
+          Alle Sätze und Deckel wurden am 05.09.2026 gegen diese Primärquellen geprüft.
         </li>
-        <li>Der WPB-Bonus für Einzelmaßnahmen an der Gebäudehülle (Variante A) ist erst ab Q1/2027 angekündigt und hier nicht angesetzt.</li>
-        <li>Der Wertschöpfungsbonus für EU-Wärmepumpen ist ebenfalls erst ab Q1/2027 angekündigt, die Höhe ist noch offen — nicht implementiert.</li>
         <li>
-          Eine vereinzelt berichtete 3-Jahres-Sperrfrist zwischen Einzelmaßnahmen- und Effizienzhausförderung ist nur in einer Quelle
-          belegt und hier nicht als Ausschluss umgesetzt — bitte vor verbindlicher Beratung gegen das aktuelle KfW-Merkblatt prüfen.
+          Geschwindigkeitsbonus (16 Prozentpunkte) und Höchstgrenze der 1. Wohneinheit (28.000 €) sinken ab 01.02.2027
+          halbjährlich (bis 0 Prozentpunkte ab 01.08.2028 bzw. 22.000 € ab 01.08.2030) — maßgeblich ist der Antragseingang,
+          deshalb das Feld &bdquo;Antragsdatum&ldquo; in Karte 2.
         </li>
-        <li>Die Antragstellung für KfW 261 zu den neuen Konditionen ist voraussichtlich erst ab Ende September 2026 möglich — im Ergebnis nur als Hinweis, nicht als Blocker.</li>
+        <li>Der WPB-Bonus (+5 Prozentpunkte) für Dämmmaßnahmen an der Gebäudehülle gilt erst für Anträge ab Q1/2027 und ist hier nicht angesetzt.</li>
+        <li>
+          Ab Q1/2027 sinkt die Grundförderung für Wärmepumpen auf 15 %; die vollen 30 % gibt es dann nur mit dem
+          Wertschöpfungsbonus für Geräte mit Ursprung in der EU (Herkunftskriterien folgen per BMWE-Infoblatt) — hier nicht angesetzt.
+        </li>
+        <li>
+          BEG-Einzelmaßnahmen und Effizienzhaus-Förderung KfW 261 sind für dieselbe Maßnahme nicht kombinierbar (RL BEG EM Nr. 8.6).
+          Eine früher berichtete 3-Jahres-Sperrfrist steht in keiner Richtlinie.
+        </li>
+        <li>Der SerSan-Bonus für EH 70 EE (+5 Prozentpunkte) ist laut KfW voraussichtlich erst ab Ende September 2026 beantragbar — im Ergebnis nur als Hinweis.</li>
       </ul>
     </details>
   );

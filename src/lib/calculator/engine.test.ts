@@ -9,6 +9,11 @@ import {
   varianteB,
   varianteC,
   zuschussEffizienzmassnahmen,
+  geringverdiener,
+  zuschussFachplanung,
+  huelleUndAnlageCap,
+  kgbSatz,
+  cap458,
 } from './engine';
 import type { LiegenschaftInput } from './types';
 
@@ -58,8 +63,14 @@ describe('Einkommensstaffel + Familienzuschlag', () => {
   it('zvE 25k, 0 Kinder -> 40%', () => closeTo(einkommensSatz({ zve: 25000, kinder: 0, neu: true }), 0.4, 0.001));
   it('zvE 35k -> 30%', () => closeTo(einkommensSatz({ zve: 35000, kinder: 0, neu: true }), 0.3, 0.001));
   it('zvE 45k -> 10%', () => closeTo(einkommensSatz({ zve: 45000, kinder: 0, neu: true }), 0.1, 0.001));
-  it('zvE 45k, 2 Kinder -> 40% (Grenze +20k)', () =>
-    closeTo(einkommensSatz({ zve: 45000, kinder: 2, neu: true }), 0.4, 0.001));
+  it('zvE 45k, 2 Kinder -> 30% (Zuschlag pauschal +10k, nicht je Kind; RL BEG EM Nr. 8.4.5)', () =>
+    closeTo(einkommensSatz({ zve: 45000, kinder: 2, neu: true }), 0.3, 0.001));
+  it('zvE 39k, 1 Kind -> 40%', () => closeTo(einkommensSatz({ zve: 39000, kinder: 1, neu: true }), 0.4, 0.001));
+  it('zvE 39k, 3 Kinder -> 40% (gleich wie 1 Kind)', () => closeTo(einkommensSatz({ zve: 39000, kinder: 3, neu: true }), 0.4, 0.001));
+  it('ALT: kein Familienzuschlag, 30% bis 40k', () => {
+    closeTo(einkommensSatz({ zve: 40000, kinder: 2, neu: false }), 0.3, 0.001);
+    closeTo(einkommensSatz({ zve: 41000, kinder: 2, neu: false }), 0, 0.001);
+  });
   it('zvE 60k -> 0%', () => closeTo(einkommensSatz({ zve: 60000, kinder: 0, neu: true }), 0, 0.001));
 });
 
@@ -100,4 +111,43 @@ describe('ALT-Rechtsstand als Kontrolle', () => {
   const alt: LiegenschaftInput = { ...base, neu: false, effizienz: true };
   it('Variante A ALT (Effizienzbonus 5% gilt noch)', () => closeTo(varianteA(alt), 31650, 5));
   it('458-Satz ALT (30+5+20=55%)', () => closeTo(satz458(alt), 0.55, 0.001));
+});
+
+describe('Primärquellen-Korrekturen 05.09.2026 (RL BEG EM v. 17.07.2026)', () => {
+  it('Geringverdiener-Deckel 80 %: 35k mit 1 Kind ja, mit 3 Kindern ebenfalls nur +10k', () => {
+    expect(geringverdiener({ neu: true, zve: 35000, kinder: 1 })).toBe(true);
+    expect(geringverdiener({ neu: true, zve: 45000, kinder: 3 })).toBe(false);
+  });
+
+  it('Fachplanung/Baubegleitung: 50 % auf 5.000 € (EFH/ZFH) bzw. 2.000 €/WE, max. 20.000 € (Nr. 8.3.1 b)', () => {
+    closeTo(zuschussFachplanung({ kostenPlanung: 11000, we: 1 }), 2500, 0.01);
+    closeTo(zuschussFachplanung({ kostenPlanung: 11000, we: 4 }), 4000, 0.01);
+    closeTo(zuschussFachplanung({ kostenPlanung: 30000, we: 12 }), 10000, 0.01);
+    closeTo(zuschussFachplanung({ kostenPlanung: 3000, we: 1 }), 1500, 0.01);
+  });
+
+  it('iSFP-Höchstgrenze ab 7. WE 15.000 € statt 16.000 € (Nr. 8.3.1 a)', () => {
+    expect(huelleUndAnlageCap({ we: 7, isfp: true, neu: true })).toBe(60000 + 5 * 30000 + 15000);
+    expect(huelleUndAnlageCap({ we: 7, isfp: false, neu: true })).toBe(30000 + 5 * 15000 + 8000);
+  });
+
+  it('Geschwindigkeitsbonus degressiv nach Antragsdatum (Nr. 8.4.4)', () => {
+    expect(kgbSatz({ neu: true, antragsdatum: '2026-09-05' })).toBe(0.16);
+    expect(kgbSatz({ neu: true, antragsdatum: '2027-02-01' })).toBe(0.12);
+    expect(kgbSatz({ neu: true, antragsdatum: '2027-08-01' })).toBe(0.08);
+    expect(kgbSatz({ neu: true, antragsdatum: '2028-02-01' })).toBe(0.04);
+    expect(kgbSatz({ neu: true, antragsdatum: '2028-08-01' })).toBe(0);
+    expect(kgbSatz({ neu: false, antragsdatum: '2028-08-01' })).toBe(0.2);
+  });
+
+  it('Höchstgrenze 1. WE degressiv 28.000 → 22.000 € (Nr. 8.3.1 a)', () => {
+    expect(cap458({ we: 1, neu: true, antragsdatum: '2026-09-05' })).toBe(28000);
+    expect(cap458({ we: 1, neu: true, antragsdatum: '2027-02-01' })).toBe(27250);
+    expect(cap458({ we: 3, neu: true, antragsdatum: '2030-08-01' })).toBe(22000 + 2 * 15000);
+    expect(cap458({ we: 1, neu: false, antragsdatum: '2030-08-01' })).toBe(30000);
+  });
+
+  it('satz458 mit Antragsdatum 03/2027: 30 + 12 + 10 = 52 %', () => {
+    closeTo(satz458({ ...base, zve: 45000, antragsdatum: '2027-03-01' }), 0.52, 0.001);
+  });
 });

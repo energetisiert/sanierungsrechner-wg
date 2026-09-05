@@ -34,8 +34,10 @@ export interface LiegenschaftInput {
   effizienz: boolean;
   /** Zu versteuerndes Haushaltseinkommen in Euro, nur selbstnutzend relevant. */
   zve: number;
-  /** Anzahl minderjähriger Kinder im Haushalt (verschiebt Einkommensgrenzen um je 10.000 €). */
+  /** Anzahl minderjähriger Kinder im Haushalt (ab 1 Kind verschieben sich die Einkommensgrenzen einmalig pauschal um 10.000 €). */
   kinder: number;
+  /** Antragsdatum KfW 458 (ISO), maßgeblich für Geschwindigkeitsbonus und Höchstgrenze (Degression ab 01.02.2027); leer = heute. */
+  antragsdatum?: string;
   ehstufe: EhStufe;
   /** Worst-Performing-Building-Bonus (KfW 261), nicht bei EH 85/Denkmal. */
   wpb: boolean;

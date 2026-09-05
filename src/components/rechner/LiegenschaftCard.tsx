@@ -55,7 +55,7 @@ export function LiegenschaftCard({ form, onChange }: { form: FormState; onChange
             <Field label="Zu versteuerndes Haushaltseinkommen (€)" hint="Laut Steuerbescheid, für Einkommensbonus KfW 458.">
               <TextInput type="number" min={0} step={1000} value={form.zve} onChange={(e) => onChange({ zve: e.target.value })} />
             </Field>
-            <Field label="Kinder im Haushalt (< 18 Jahre)" hint="+10.000 € je Kind auf alle Einkommensgrenzen.">
+            <Field label="Kinder im Haushalt (< 18 Jahre)" hint="Ab einem Kind verschieben sich alle Einkommensgrenzen einmalig pauschal um 10.000 € (nicht je Kind).">
               <TextInput type="number" min={0} step={1} value={form.kinder} onChange={(e) => onChange({ kinder: e.target.value })} />
             </Field>
           </div>

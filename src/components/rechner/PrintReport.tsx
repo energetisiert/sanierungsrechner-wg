@@ -282,9 +282,9 @@ export function PrintReport({
       <div className="print-break-avoid mt-6 rounded-xl bg-tint p-3.5 text-[9px] leading-[1.55] text-muted">
         <b className="font-semibold text-strong">Rechtlicher Hinweis.</b> Überschlägige Berechnung nach den öffentlichen
         Förderrichtlinien von BAFA, KfW und BMF (Rechtsstand siehe Ergebnis). Keine Gewähr sowie keine Rechts- oder
-        Steuerberatung. Die finale BEG-Richtlinie ist noch nicht im Bundesanzeiger veröffentlicht. Alle Sätze und Deckel
-        basieren auf BAFA-Merkblättern, dem KfW-Merkblatt 261 und Fachportalen, Stand Juli/August 2026 — vor einer
-        Antragstellung gegen die dann veröffentlichte Förderrichtlinie gegenprüfen.
+        Steuerberatung. Rechtsstand: Richtlinie BEG EM vom 17.07.2026 (BAnz AT 27.08.2026 B1, rückwirkend ab
+        21.07.2026), Richtlinie BEG WG vom 17.07.2026 und KfW-Merkblätter 458/261 (Stand 07/2026) — vor einer
+        Antragstellung gegen den dann aktuellen Richtlinienstand gegenprüfen.
       </div>
 
       {/* Fußzeile: einheitlich über alle Tools hinweg (Firma + Anschrift, Kontakt). */}

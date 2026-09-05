@@ -14,6 +14,8 @@ export interface FormState {
   effizienz: boolean;
   zve: string;
   kinder: string;
+  /** ISO-Datum; leer = heutiges Datum (serverseitig). */
+  antragsdatum: string;
   ehstufe: EhStufe;
   wpb: boolean;
   sersan: boolean;
@@ -44,6 +46,7 @@ export const STANDARD_FORM: FormState = {
   effizienz: false,
   zve: '',
   kinder: '0',
+  antragsdatum: '',
   ehstufe: 'Effizienzhaus 55',
   wpb: false,
   sersan: false,
@@ -78,6 +81,7 @@ export function toInput(f: FormState): LiegenschaftInput {
     effizienz: f.effizienz,
     zve: num(f.zve),
     kinder: Math.max(0, Math.round(num(f.kinder))),
+    antragsdatum: /^\d{4}-\d{2}-\d{2}$/.test(f.antragsdatum) ? f.antragsdatum : undefined,
     ehstufe: f.ehstufe,
     wpb: f.wpb,
     sersan: f.sersan,

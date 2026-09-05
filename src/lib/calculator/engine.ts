@@ -23,10 +23,58 @@ import type {
  * Build hart fehlschlagen, der diese Datei versehentlich aus einer
  * Client-Komponente importiert.
  *
- * Rechtsstand: BEG-Reform 08.07.2026 (Haushaltsausschuss) / Inkrafttreten
- * 21.07.2026. Finale Förderrichtlinie noch nicht im Bundesanzeiger
- * veröffentlicht — bekannte Unsicherheiten siehe README.md.
+ * Rechtsstand: BEG-Reform, Inkrafttreten 21.07.2026. Primärquellen-Prüfung
+ * 05.09.2026 gegen die Richtlinie BEG EM vom 17.07.2026 (Bundesanzeiger-
+ * Fassung vom 17.08.2026, BAnz AT 27.08.2026 B1, rückwirkend ab 21.07.2026),
+ * die Richtlinie BEG WG vom 17.07.2026 und die KfW-Merkblätter 458/261
+ * (Stand 07/2026). Dabei korrigiert: Familienzuschlag pauschal statt je Kind
+ * (EM Nr. 8.4.5), Fachplanung/Baubegleitung WE-gestaffelt (EM Nr. 8.3.1 b),
+ * iSFP-Höchstgrenze ab 7. WE 15.000 € (EM Nr. 8.3.1 a), Degression von
+ * Geschwindigkeitsbonus und Höchstgrenze ab 01.02.2027 (EM Nr. 8.4.4, 8.3.1 a).
  */
+
+/**
+ * Datumsgestaffelte Werte der Heizungsförderung NEU — maßgeblich ist der
+ * Antragseingang (KfW-Merkblatt 458). Ohne `antragsdatum` gilt das heutige
+ * Datum (Server Action), Tests übergeben ein festes.
+ */
+export const KGB_STAFFEL_NEU: ReadonlyArray<{ ab: string; satz: number }> = [
+  { ab: '2026-07-21', satz: 0.16 },
+  { ab: '2027-02-01', satz: 0.12 },
+  { ab: '2027-08-01', satz: 0.08 },
+  { ab: '2028-02-01', satz: 0.04 },
+  { ab: '2028-08-01', satz: 0 },
+];
+
+export const CAP458_ERSTE_WE_NEU: ReadonlyArray<{ ab: string; wert: number }> = [
+  { ab: '2026-07-21', wert: 28000 },
+  { ab: '2027-02-01', wert: 27250 },
+  { ab: '2027-08-01', wert: 26500 },
+  { ab: '2028-02-01', wert: 25750 },
+  { ab: '2028-08-01', wert: 25000 },
+  { ab: '2029-02-01', wert: 24250 },
+  { ab: '2029-08-01', wert: 23500 },
+  { ab: '2030-02-01', wert: 22750 },
+  { ab: '2030-08-01', wert: 22000 },
+];
+
+function stichtagWert<T extends { ab: string }>(staffel: ReadonlyArray<T>, datum: Date): T {
+  let treffer: T = staffel[0];
+  for (const eintrag of staffel) {
+    if (new Date(eintrag.ab).getTime() <= datum.getTime()) treffer = eintrag;
+  }
+  return treffer;
+}
+
+export function antragsDatum(i: Pick<LiegenschaftInput, 'antragsdatum'>): Date {
+  const d = i.antragsdatum ? new Date(i.antragsdatum) : new Date();
+  return Number.isNaN(d.getTime()) ? new Date() : d;
+}
+
+/** Klimageschwindigkeitsbonus: NEU degressiv nach Antragsdatum, ALT 20 %. */
+export function kgbSatz(i: Pick<LiegenschaftInput, 'neu' | 'antragsdatum'>): number {
+  return i.neu ? stichtagWert(KGB_STAFFEL_NEU, antragsDatum(i)).satz : 0.2;
+}
 
 /**
  * Tilgungszuschüsse KfW 261 in % — Quelle: BMWE-Eckpunkte + Fachportale, Stand 08/2026.
@@ -48,7 +96,10 @@ export function staffel(we: number, erst: number, folge = 15000, ab7 = 8000): nu
 /* Wichtig: Hülle und Lüftung teilen sich EINE Höchstgrenze, keine zwei getrennten Töpfe. */
 
 export function huelleUndAnlageCap(i: Pick<LiegenschaftInput, 'we' | 'isfp' | 'neu'>): number {
-  return i.neu ? staffel(i.we, 30000) * (i.isfp ? 2 : 1) : (i.isfp ? 60000 : 30000) * i.we;
+  // NEU (RL BEG EM Nr. 8.3.1 a): ohne iSFP 30.000 / 15.000 / 8.000 €, mit iSFP-Bonus 60.000 / 30.000 / 15.000 €
+  // je 1. / 2.–6. / ab 7. WE — ab der 7. WE also 15.000 €, nicht die Verdopplung 16.000 €.
+  if (i.neu) return i.isfp ? staffel(i.we, 60000, 30000, 15000) : staffel(i.we, 30000);
+  return (i.isfp ? 60000 : 30000) * i.we;
 }
 
 export function zuschussEffizienzmassnahmen(
@@ -70,40 +121,56 @@ export function zuschussIsfp(i: Pick<LiegenschaftInput, 'isfp' | 'we' | 'kostenI
   return i.isfp ? Math.min(i.kostenIsfp * 0.5, i.we <= 2 ? 650 : 850) : 0;
 }
 
-export function zuschussFachplanung(i: Pick<LiegenschaftInput, 'kostenPlanung'>): number {
-  return Math.min(i.kostenPlanung * 0.5, 2500);
+/**
+ * Fachplanung und Baubegleitung BEG EM: 50 % der förderfähigen Ausgaben,
+ * Höchstausgaben 5.000 € bei EFH/ZFH, ab 3 WE 2.000 € je WE, max. 20.000 €
+ * (RL BEG EM Nr. 8.3.1 b, 8.4.7). Bisher pauschal 2.500 € Zuschuss — für
+ * Mehrfamilienhäuser zu niedrig.
+ */
+export function zuschussFachplanung(i: Pick<LiegenschaftInput, 'kostenPlanung' | 'we'>): number {
+  const hoechstausgaben = i.we <= 2 ? 5000 : Math.min(2000 * i.we, 20000);
+  return Math.min(i.kostenPlanung, hoechstausgaben) * 0.5;
 }
 
 /* ---- KfW 458: Heizungstausch ---- */
 
-export function cap458(i: Pick<LiegenschaftInput, 'we' | 'neu'>): number {
-  return staffel(i.we, i.neu ? 28000 : 30000);
+/** Höchstgrenze Heizungstausch: NEU 28.000 € 1. WE (degressiv ab 01.02.2027), ALT 30.000 €; 15.000 / 8.000 € folgende WE. */
+export function cap458(i: Pick<LiegenschaftInput, 'we' | 'neu' | 'antragsdatum'>): number {
+  return staffel(i.we, i.neu ? stichtagWert(CAP458_ERSTE_WE_NEU, antragsDatum(i)).wert : 30000);
 }
 
-/** Einkommensbonus gestaffelt (NEU: 3 Stufen + Familienzuschlag; ALT: 1 Stufe). */
+/**
+ * Familienzuschlag: bei mindestens einem minderjährigen Kind verschieben sich
+ * alle Einkommensgrenzen EINMALIG UND PAUSCHAL um 10.000 € — nicht je Kind
+ * (RL BEG EM Nr. 8.4.5 "pauschal und einmalig"; KfW 458 "unabhängig von der
+ * Anzahl weiterer Kinder"). Nur im Rechtsstand NEU; ALT kannte keinen Zuschlag.
+ */
+export function familienzuschlag(i: Pick<LiegenschaftInput, 'kinder' | 'neu'>): number {
+  return i.neu && (i.kinder || 0) >= 1 ? 10000 : 0;
+}
+
+/** Einkommensbonus gestaffelt (NEU: 40/30/10 pp bis 30/40/50 T€ + Familienzuschlag; ALT: 30 pp bis 40 T€). */
 export function einkommensSatz(i: Pick<LiegenschaftInput, 'zve' | 'kinder' | 'neu'>): number {
-  const kids = i.kinder || 0;
-  const g1 = 30000 + kids * 10000;
-  const g2 = 40000 + kids * 10000;
-  const g3 = 50000 + kids * 10000;
-  if (i.zve <= g1) return i.neu ? 0.4 : 0.3;
-  if (i.zve <= g2) return 0.3;
-  if (i.neu && i.zve <= g3) return 0.1;
+  const z = familienzuschlag(i);
+  if (i.zve <= 30000 + z) return i.neu ? 0.4 : 0.3;
+  if (i.zve <= 40000 + z) return 0.3;
+  if (i.neu && i.zve <= 50000 + z) return 0.1;
   return 0;
 }
 
+/** Deckel 80 % statt 70 %: zvE ≤ 30.000 € (mit Familienzuschlag ≤ 40.000 €), nur NEU. */
 export function geringverdiener(i: Pick<LiegenschaftInput, 'neu' | 'zve' | 'kinder'>): boolean {
-  return i.neu && i.zve <= 30000 + (i.kinder || 0) * 10000;
+  return i.neu && i.zve <= 30000 + familienzuschlag(i);
 }
 
 export function satz458(
-  i: Pick<LiegenschaftInput, 'antrag' | 'neu' | 'effizienz' | 'klima' | 'zve' | 'kinder'>,
+  i: Pick<LiegenschaftInput, 'antrag' | 'neu' | 'effizienz' | 'klima' | 'zve' | 'kinder' | 'antragsdatum'>,
 ): number {
   const selbst = i.antrag === 'Privatperson (selbstnutzend)';
   let s = 0.3;
   if (!i.neu && i.effizienz) s += 0.05; // Effizienzbonus: nur ALT, entfällt NEU ersatzlos
   if (selbst) {
-    s += i.klima ? (i.neu ? 0.16 : 0.2) : 0; // Klimageschwindigkeit: neu 16 % (degressiv ab 02/2027)
+    s += i.klima ? kgbSatz(i) : 0; // Klimageschwindigkeit: NEU 16 pp, degressiv ab 01.02.2027 (RL BEG EM Nr. 8.4.4)
     s += einkommensSatz(i);
   }
   // Deckel: NEU 70 %, für Geringverdiener (zvE ≤ 30 T€ + Familienzuschlag) 80 %. ALT: einheitlich 70 %.
@@ -114,7 +181,7 @@ export function satz458(
 export function zuschuss458(
   i: Pick<
     LiegenschaftInput,
-    'kostenHeizung' | 'kostenUmfeld' | 'we' | 'neu' | 'antrag' | 'effizienz' | 'klima' | 'zve' | 'kinder'
+    'kostenHeizung' | 'kostenUmfeld' | 'we' | 'neu' | 'antrag' | 'effizienz' | 'klima' | 'zve' | 'kinder' | 'antragsdatum'
   >,
 ): number {
   return Math.min(i.kostenHeizung + i.kostenUmfeld, cap458(i)) * satz458(i);
@@ -205,7 +272,7 @@ export function status(i: LiegenschaftInput): StatusErgebnis {
   }
   return {
     ok: true,
-    txt: 'Alle gewählten Boni sind in dieser Konstellation ansetzbar. Hinweis: Antragstellung KfW 261 zu neuen Konditionen voraussichtlich erst ab Ende September 2026 möglich.',
+    txt: 'Alle gewählten Boni sind in dieser Konstellation ansetzbar. Hinweis: der SerSan-Bonus für EH 70 EE ist laut KfW voraussichtlich erst ab Ende September 2026 beantragbar.',
   };
 }
 

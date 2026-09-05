@@ -1,7 +1,7 @@
 'use client';
 
 import { Card } from '@/components/ui/Card';
-import { Checkbox, Field, Select } from '@/components/ui/Field';
+import { Checkbox, Field, Select, TextInput } from '@/components/ui/Field';
 import type { EhStufe } from '@/lib/calculator/types';
 import type { FormState } from './formstate';
 
@@ -19,6 +19,15 @@ export function FoerderprofilCard({ form, onChange }: { form: FormState; onChang
   return (
     <Card eyebrow="Karte 2" title="Förderprofil & Boni">
       <div className="space-y-4">
+        {form.neu && (
+          <Field
+            label="Antragsdatum Heizungstausch (KfW 458)"
+            hint="Leer = heute. Geschwindigkeitsbonus (16 → 12 → 8 → 4 → 0 %) und Höchstgrenze der 1. Wohneinheit (28.000 → 22.000 €) sinken ab 01.02.2027 halbjährlich."
+          >
+            <TextInput type="date" value={form.antragsdatum} onChange={(e) => onChange({ antragsdatum: e.target.value })} />
+          </Field>
+        )}
+
         <Field label="Ziel-Effizienzhaus-Stufe" hint="Für die KfW-261-Berechnung (Variante B).">
           <Select value={form.ehstufe} onChange={(e) => onChange({ ehstufe: e.target.value as EhStufe })}>
             {EH_STUFEN.map((s) => (
